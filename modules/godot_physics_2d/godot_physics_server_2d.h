@@ -39,6 +39,23 @@
 #include "core/templates/rid_owner.h"
 #include "servers/physics_server_2d.h"
 
+class SpaceOrdering {
+public:
+	GodotSpace2D* space;
+	int priority;
+
+	bool operator==(const SpaceOrdering& other) const {
+		return space == other.space && priority == other.priority;
+	}
+};
+
+// We want the highest priority to be first
+struct _PriorityComparator {
+	_FORCE_INLINE_ bool operator()(const SpaceOrdering &a, const SpaceOrdering &b) const {
+		return a.priority > b.priority;
+	}
+};
+
 class GodotPhysicsServer2D : public PhysicsServer2D {
 	GDCLASS(GodotPhysicsServer2D, PhysicsServer2D);
 
@@ -56,7 +73,7 @@ class GodotPhysicsServer2D : public PhysicsServer2D {
 	bool flushing_queries = false;
 
 	GodotStep2D *stepper = nullptr;
-	HashSet<GodotSpace2D *> active_spaces;
+	Vector<SpaceOrdering> active_spaces;
 
 	mutable RID_PtrOwner<GodotShape2D, true> shape_owner;
 	mutable RID_PtrOwner<GodotSpace2D, true> space_owner;
@@ -107,6 +124,7 @@ public:
 
 	virtual RID space_create() override;
 	virtual void space_set_active(RID p_space, bool p_active) override;
+	virtual void space_set_priority(RID p_space, int p_priority) override;
 	virtual bool space_is_active(RID p_space) const override;
 
 	virtual void space_set_param(RID p_space, SpaceParameter p_param, real_t p_value) override;

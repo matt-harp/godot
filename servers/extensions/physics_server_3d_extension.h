@@ -231,6 +231,7 @@ public:
 
 	EXBIND0R(RID, space_create)
 	EXBIND2(space_set_active, RID, bool)
+	EXBIND2(space_set_priority, RID, int)
 	EXBIND1RC(bool, space_is_active, RID)
 
 	EXBIND3(space_set_param, RID, SpaceParameter, real_t)

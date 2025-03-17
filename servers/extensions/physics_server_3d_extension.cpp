@@ -156,6 +156,7 @@ void PhysicsServer3DExtension::_bind_methods() {
 
 	GDVIRTUAL_BIND(_space_create);
 	GDVIRTUAL_BIND(_space_set_active, "space", "active");
+	GDVIRTUAL_BIND(_space_set_priority, "space", "priority");
 	GDVIRTUAL_BIND(_space_is_active, "space");
 
 	GDVIRTUAL_BIND(_space_set_param, "space", "param", "value");

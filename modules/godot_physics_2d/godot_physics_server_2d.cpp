@@ -232,17 +232,45 @@ void GodotPhysicsServer2D::space_set_active(RID p_space, bool p_active) {
 	GodotSpace2D *space = space_owner.get_or_null(p_space);
 	ERR_FAIL_NULL(space);
 	if (p_active) {
-		active_spaces.insert(space);
+		active_spaces.push_back(SpaceOrdering{ space, 0 });
+		active_spaces.sort_custom<_PriorityComparator>();
 	} else {
-		active_spaces.erase(space);
+		for (int i = 0; i < active_spaces.size(); i++) {
+			if (active_spaces[i].space == space) {
+				active_spaces.erase(active_spaces[i]);
+				return;
+			}
+		}
 	}
+}
+
+void GodotPhysicsServer2D::space_set_priority(RID p_space, int p_priority) {
+	GodotSpace2D *space = space_owner.get_or_null(p_space);
+	ERR_FAIL_NULL(space);
+
+	for (int i = 0; i < active_spaces.size(); i++) {
+		if (active_spaces[i].space == space) {
+			active_spaces.erase(active_spaces[i]);
+			active_spaces.push_back(SpaceOrdering{ space, p_priority });
+			active_spaces.sort_custom<_PriorityComparator>();
+			return;
+		}
+	}
+
+	WARN_PRINT_ED("Tried to set priority on an inactive space. Use space_set_active first.");
 }
 
 bool GodotPhysicsServer2D::space_is_active(RID p_space) const {
 	GodotSpace2D *space = space_owner.get_or_null(p_space);
 	ERR_FAIL_NULL_V(space, false);
 
-	return active_spaces.has(space);
+	for (int i = 0; i < active_spaces.size(); i++) {
+		if (active_spaces[i].space == space) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void GodotPhysicsServer2D::space_set_param(RID p_space, SpaceParameter p_param, real_t p_value) {
@@ -1263,7 +1291,11 @@ void GodotPhysicsServer2D::free(RID p_rid) {
 			co->set_space(nullptr);
 		}
 
-		active_spaces.erase(space);
+		for (int i = 0; i < active_spaces.size(); i++) {
+			if (active_spaces[i].space == space) {
+				active_spaces.erase(active_spaces[i]);
+			}
+		}
 		free(space->get_default_area()->get_self());
 		space_owner.free(p_rid);
 		memdelete(space);
@@ -1297,11 +1329,11 @@ void GodotPhysicsServer2D::step(real_t p_step) {
 	island_count = 0;
 	active_objects = 0;
 	collision_pairs = 0;
-	for (GodotSpace2D *E : active_spaces) {
-		stepper->step(E, p_step);
-		island_count += E->get_island_count();
-		active_objects += E->get_active_objects();
-		collision_pairs += E->get_collision_pairs();
+	for (SpaceOrdering &E : active_spaces) {
+		stepper->step(E.space, p_step);
+		island_count += E.space->get_island_count();
+		active_objects += E.space->get_active_objects();
+		collision_pairs += E.space->get_collision_pairs();
 	}
 }
 
@@ -1318,8 +1350,8 @@ void GodotPhysicsServer2D::flush_queries() {
 
 	uint64_t time_beg = OS::get_singleton()->get_ticks_usec();
 
-	for (GodotSpace2D *E : active_spaces) {
-		E->call_queries();
+	for (SpaceOrdering &E : active_spaces) {
+		E.space->call_queries();
 	}
 
 	flushing_queries = false;
@@ -1338,9 +1370,9 @@ void GodotPhysicsServer2D::flush_queries() {
 			total_time[i] = 0;
 		}
 
-		for (const GodotSpace2D *E : active_spaces) {
+		for (const SpaceOrdering &E : active_spaces) {
 			for (int i = 0; i < GodotSpace2D::ELAPSED_TIME_MAX; i++) {
-				total_time[i] += E->get_elapsed_time(GodotSpace2D::ElapsedTime(i));
+				total_time[i] += E.space->get_elapsed_time(GodotSpace2D::ElapsedTime(i));
 			}
 		}
 

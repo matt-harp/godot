@@ -99,6 +99,7 @@ public:
 
 	FUNCRID(space);
 	FUNC2(space_set_active, RID, bool);
+	FUNC2(space_set_priority, RID, int);
 	FUNC1RC(bool, space_is_active, RID);
 
 	FUNC3(space_set_param, RID, SpaceParameter, real_t);

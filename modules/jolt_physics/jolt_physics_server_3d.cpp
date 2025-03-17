@@ -200,18 +200,47 @@ void JoltPhysicsServer3D::space_set_active(RID p_space, bool p_active) {
 
 	if (p_active) {
 		space->set_active(true);
-		active_spaces.insert(space);
+		active_spaces.push_back(SpaceOrdering{ space, 0 });
+		active_spaces.sort_custom<_PriorityComparator>();
 	} else {
 		space->set_active(false);
-		active_spaces.erase(space);
+		for (int i = 0; i < active_spaces.size(); i++) {
+			if (active_spaces[i].space == space) {
+				active_spaces.erase(active_spaces[i]);
+				return;
+			}
+		}
 	}
+}
+
+void JoltPhysicsServer3D::space_set_priority(RID p_space, int p_priority) {
+	JoltSpace3D *space = space_owner.get_or_null(p_space);
+	ERR_FAIL_NULL(space);
+
+	for (int i = 0; i < active_spaces.size(); i++) {
+		if (active_spaces[i].space == space) {
+			active_spaces.erase(active_spaces[i]);
+			active_spaces.push_back(SpaceOrdering { space, p_priority });
+			active_spaces.sort_custom<_PriorityComparator>();
+
+			return;
+		}
+	}
+
+	WARN_PRINT_ED("Tried to set priority on an inactive space. Use space_set_active first.");
 }
 
 bool JoltPhysicsServer3D::space_is_active(RID p_space) const {
 	JoltSpace3D *space = space_owner.get_or_null(p_space);
 	ERR_FAIL_NULL_V(space, false);
 
-	return active_spaces.has(space);
+	for (int i = 0; i < active_spaces.size(); i++) {
+		if (active_spaces[i].space == space) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void JoltPhysicsServer3D::space_set_param(RID p_space, SpaceParameter p_param, real_t p_value) {
@@ -1576,10 +1605,10 @@ void JoltPhysicsServer3D::step(real_t p_step) {
 		return;
 	}
 
-	for (JoltSpace3D *active_space : active_spaces) {
+	for (SpaceOrdering &active_space : active_spaces) {
 		job_system->pre_step();
 
-		active_space->step((float)p_step);
+		active_space.space->step((float)p_step);
 
 		job_system->post_step();
 	}
@@ -1600,8 +1629,8 @@ void JoltPhysicsServer3D::flush_queries() {
 
 	flushing_queries = true;
 
-	for (JoltSpace3D *space : active_spaces) {
-		space->call_queries();
+	for (SpaceOrdering &E : active_spaces) {
+		E.space->call_queries();
 	}
 
 	flushing_queries = false;
@@ -1670,8 +1699,8 @@ void JoltPhysicsServer3D::free_joint(JoltJoint3D *p_joint) {
 #ifdef DEBUG_ENABLED
 
 void JoltPhysicsServer3D::dump_debug_snapshots(const String &p_dir) {
-	for (JoltSpace3D *space : active_spaces) {
-		space->dump_debug_snapshot(p_dir);
+	for (SpaceOrdering &E : active_spaces) {
+		E.space->dump_debug_snapshot(p_dir);
 	}
 }
 

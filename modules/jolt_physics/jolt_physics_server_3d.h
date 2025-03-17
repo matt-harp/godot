@@ -32,6 +32,7 @@
 #define JOLT_PHYSICS_SERVER_3D_H
 
 #include "core/templates/rid_owner.h"
+#include "core/templates/tuple.h"
 #include "servers/physics_server_3d.h"
 
 class JoltArea3D;
@@ -41,6 +42,23 @@ class JoltJoint3D;
 class JoltShape3D;
 class JoltSoftBody3D;
 class JoltSpace3D;
+
+class SpaceOrdering {
+public:
+	JoltSpace3D* space;
+	int priority;
+
+	bool operator==(const SpaceOrdering& other) const {
+		return space == other.space && priority == other.priority;
+	}
+};
+
+// We want the highest priority to be first
+struct _PriorityComparator {
+	_FORCE_INLINE_ bool operator()(const SpaceOrdering &a, const SpaceOrdering &b) const {
+		return a.priority > b.priority;
+	}
+};
 
 class JoltPhysicsServer3D final : public PhysicsServer3D {
 	GDCLASS(JoltPhysicsServer3D, PhysicsServer3D)
@@ -54,7 +72,7 @@ class JoltPhysicsServer3D final : public PhysicsServer3D {
 	mutable RID_PtrOwner<JoltShape3D, true> shape_owner;
 	mutable RID_PtrOwner<JoltJoint3D, true> joint_owner;
 
-	HashSet<JoltSpace3D *> active_spaces;
+	Vector<SpaceOrdering> active_spaces;
 
 	JoltJobSystem *job_system = nullptr;
 
@@ -152,6 +170,7 @@ public:
 	virtual RID space_create() override;
 
 	virtual void space_set_active(RID p_space, bool p_active) override;
+	virtual void space_set_priority(RID p_space, int p_priority) override;
 	virtual bool space_is_active(RID p_space) const override;
 
 	virtual void space_set_param(RID p_space, PhysicsServer3D::SpaceParameter p_param, real_t p_value) override;

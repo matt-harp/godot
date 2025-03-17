@@ -252,6 +252,7 @@ public:
 
 	virtual RID space_create() = 0;
 	virtual void space_set_active(RID p_space, bool p_active) = 0;
+	virtual void space_set_priority(RID p_space, int p_priority) = 0;
 	virtual bool space_is_active(RID p_space) const = 0;
 
 	enum SpaceParameter {
