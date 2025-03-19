@@ -1634,7 +1634,7 @@ void GodotPhysicsServer3D::free(RID p_rid) {
 		for (int i = 0; i < active_spaces.size(); i++) {
 			if (active_spaces[i].space == space) {
 				active_spaces.erase(active_spaces[i]);
-				return;
+				break;
 			}
 		}
 		free(space->get_default_area()->get_self());
