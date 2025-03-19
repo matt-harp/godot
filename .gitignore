@@ -80,6 +80,9 @@ __pycache__/
 # Python modules
 .*_cache/
 
+# Direnv
+.direnv
+
 # Documentation
 doc/_build/
 
