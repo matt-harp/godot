@@ -76,14 +76,7 @@ let
     ];
     separateDebugInfo = true;
 
-    # Set the build name which is part of the version. In official downloads, this
-    # is set to 'official'. When not specified explicitly, it is set to
-    # 'custom_build'. Other platforms packaging Godot (Gentoo, Arch, Flatpack
-    # etc.) usually set this to their name as well.
-    #
-    # See also 'methods.py' in the Godot repo and 'build' in
-    # https://docs.godotengine.org/en/stable/classes/class_engine.html#class-engine-method-get-version-info
-    BUILD_NAME = "nixpkgs";
+    BUILD_NAME = "custom";
 
     preConfigure = lib.optionalString withMono ''
       # TODO: avoid pulling in dependencies of windows-only project
