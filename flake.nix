@@ -6,15 +6,13 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        version = "4.5-dev";
+        
+        vInfo = builtins.fromTOML (builtins.readFile ./version.py);
+        version = "${toString vInfo.major}.${toString vInfo.minor}.${toString vInfo.patch}-${toString vInfo.status}";
       in {
         packages = rec {
           godot = pkgs.callPackage ./default.nix { inherit version; };
-          godot-mono = pkgs.callPackage ./default.nix {
-            inherit version;
-            withMono = true;
-            nugetDeps = ./deps.json;
-          };
+
           default = godot;
         };
 
