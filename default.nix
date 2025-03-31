@@ -65,7 +65,7 @@ let
   dotnet-sdk = dotnetCorePackages.sdk_8_0-source;
 
   attrs = finalAttrs: rec {
-    pname = "godot${suffix}";
+    pname = "godot4${suffix}";
     inherit version;
 
     src = ./.;
@@ -185,21 +185,21 @@ let
         runHook preInstall
 
         mkdir -p "$out/bin"
-        cp bin/godot.* $out/bin/godot${suffix}
+        cp bin/godot.* $out/bin/godot4${suffix}
 
         installManPage misc/dist/linux/godot.6
 
         mkdir -p "$out"/share/{applications,icons/hicolor/scalable/apps}
-        cp misc/dist/linux/org.godotengine.Godot.desktop "$out/share/applications/org.godotengine.Godot${suffix}.desktop"
-        substituteInPlace "$out/share/applications/org.godotengine.Godot${suffix}.desktop" \
-          --replace "Exec=godot" "Exec=$out/bin/godot${suffix}" \
+        cp misc/dist/linux/org.godotengine.Godot.desktop "$out/share/applications/org.godotengine.Godot4${suffix}.desktop"
+        substituteInPlace "$out/share/applications/org.godotengine.Godot4${suffix}.desktop" \
+          --replace "Exec=godot" "Exec=$out/bin/godot4${suffix}" \
           --replace "Godot Engine" "Godot Engine 4"
         cp icon.svg "$out/share/icons/hicolor/scalable/apps/godot.svg"
         cp icon.png "$out/share/icons/godot.png"
       ''
       + lib.optionalString withMono ''
         cp -r bin/GodotSharp/ $out/bin/
-        wrapProgram $out/bin/godot${suffix} \
+        wrapProgram $out/bin/godot4${suffix} \
           --set DOTNET_ROOT ${dotnet-sdk} \
           --prefix PATH : "${
             lib.makeBinPath [
@@ -208,7 +208,8 @@ let
           }"
       ''
       + ''
-        ln -s godot${suffix} "$out"/bin/godot
+        ls -a
+        ln -s godot4${suffix} "$out"/bin/godot
         runHook post Install
       '';
 
@@ -335,7 +336,7 @@ let
       "big-parallel"
     ];
 
-    meta.mainProgram = "godot${suffix}";
+    meta.mainProgram = "godot4${suffix}";
   };
 
 in
