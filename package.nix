@@ -75,7 +75,7 @@ in stdenv.mkDerivation rec {
 
   inherit src;
 
-  outputs = [ "out" ] ++ lib.optional (isEditor) "man";
+  outputs = [ "out" ];
   separateDebugInfo = true;
 
   BUILD_NAME = "custom";
