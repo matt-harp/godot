@@ -57,6 +57,10 @@
           };
 
           devShells.default = pkgs.mkShell {
+            nativeBuildInputs = with pkgs; [
+              pkg-config
+              autoPatchelfHook
+            ];
             buildInputs = with pkgs; [
               # Godot build dependencies
               scons
@@ -65,8 +69,13 @@
               python3
               clang
               ccache
+              bzip2
 
-              # Runtime dependencies
+              # Development tools
+              gdb
+              valgrind
+            ];
+            runtimeDependencies = with pkgs; [
               alsa-lib
               bzip2
               dbus
@@ -90,53 +99,7 @@
               wayland
               wayland-scanner
               zlib
-
-              # Development tools
-              gdb
-              valgrind
             ];
-
-            shellHook = ''
-              echo "Godot development environment"
-              echo ""
-              echo "Quick commands:"
-              echo "  Build editor:           scons -j$(nproc) platform=linuxbsd target=editor use_llvm=yes precision=double"
-              echo "  Build release template: scons -j$(nproc) platform=linuxbsd target=template_release use_llvm=yes precision=double"
-              echo "  Build debug template:   scons -j$(nproc) platform=linuxbsd target=template_debug use_llvm=yes precision=double"
-              echo "  Clean build:            scons -c"
-              echo ""
-              echo "Nix commands:"
-              echo "  nix build .#godot-editor           - Build editor via Nix"
-              echo "  nix build .#godot-template-release - Build release template via Nix"
-              echo "  nix run .#godot-editor             - Build and run editor"
-              echo ""
-
-              # Set up environment
-              export CC=clang
-              export CXX=clang++
-              export CCACHE_DIR="$HOME/.cache/ccache"
-              mkdir -p "$CCACHE_DIR"
-
-              # Add helper functions
-              godot_build() {
-                local target=''${1:-editor}
-                local precision=''${2:-double}
-                echo "Building Godot with target=$target precision=$precision"
-                scons -j$(nproc) platform=linuxbsd target=$target use_llvm=yes precision=$precision ccflags="-fno-strict-aliasing" linkflags="-Wl,--build-id -lbz2"
-              }
-
-              godot_run() {
-                local binary=$(find bin -name "godot.linuxbsd.editor.*" | head -1)
-                if [[ -f "$binary" ]]; then
-                  echo "Running: $binary"
-                  "$binary" "$@"
-                else
-                  echo "No editor binary found. Build first with: godot_build editor"
-                fi
-              }
-
-              export -f godot_build godot_run
-            '';
           };
         };
     };

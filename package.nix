@@ -40,7 +40,7 @@
   withUdev ? true,
   withWayland ? true,
   withX11 ? true,
-  withPrecision ? "double",
+  withPrecision ? "single",
   buildTarget ? "editor"
 }:
 
